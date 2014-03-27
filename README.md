@@ -19,7 +19,7 @@ For example, this input:
 
 gives this output:
 
-    (301) google.com -> http://www.google.com/                                                                                                                                           │
+    (301) google.com -> http://www.google.com/
     (200) www.google.com
 
 The tool is lazy, and doesn't follow redirects, but it does show them. To get
