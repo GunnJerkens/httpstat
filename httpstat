@@ -1,0 +1,19 @@
+#!/bin/bash
+
+if [ -t 0 ]; then
+
+echo -e "\nUSAGE: cat urls.txt | $(basename $0)\n\nYou're in interactive mode: type URLs on separate lines, ^D to run, or ^C to cancel."
+fi
+urlArray=( `cat /dev/stdin` )
+empty=y
+for url in "${urlArray[@]}"; do
+  empty=n
+  headers="$(curl -s --head $url)"
+  httpStatus="$(echo "$headers" | grep '^HTTP' | perl -pe 's/.* (\d{3}) .*$/$1/')"
+  location="$(echo "$headers" | grep '^Location:' | perl -pe 's/^Location: //')"
+  output="($httpStatus) $url"
+  if [ -n "$location" ]; then
+    output="$output -> $location"
+  fi
+  echo $output
+done
