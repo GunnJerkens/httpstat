@@ -1,19 +1,48 @@
 #!/bin/bash
 
-if [ -t 0 ]; then
+script=`basename $0`
+while getopts 'v' flag; do
+  case $flag in
+    v ) verbose=y;;
+  esac
+done
+shift $(($OPTIND-1)); OPTIND=1
 
-echo -e "\nUSAGE: cat urls.txt | $(basename $0)\n\nYou're in interactive mode: type URLs on separate lines, ^D to run, or ^C to cancel."
+if [ -t 0 ]; then
+  urlArray=($@)
+else
+  urlArray=( `cat /dev/stdin` )
 fi
-urlArray=( `cat /dev/stdin` )
-empty=y
+if [ -z "$urlArray" ]; then
+  echo -e "USAGE: $script [-v] [urls...]
+
+You may also pipe in a list of URLs, one per line:
+
+  cat urls.txt | $(basename $0)"
+  exit 0
+fi
+
+colorDefault="\033[0m"
+colorRed="\033[1;31m"
+colorYellow="\033[1;33m"
+colorCyan="\033[1;36m"
 for url in "${urlArray[@]}"; do
-  empty=n
   headers="$(curl -s --head $url)"
   httpStatus="$(echo "$headers" | grep '^HTTP' | perl -pe 's/.* (\d{3}) .*$/$1/')"
+  X="$colorDefault";
+  case "${httpStatus:0:1}" in
+    3 ) O="$colorCyan";;
+    4 ) O="$colorYellow";;
+    5 ) O="$colorRed";;
+    * ) O=""; X="";;
+  esac
   location="$(echo "$headers" | grep '^Location:' | perl -pe 's/^Location: //')"
-  output="($httpStatus) $url"
+  output="$O$httpStatus$X $url"
   if [ -n "$location" ]; then
     output="$output -> $location"
   fi
-  echo $output
+  echo -e $output
+  if [ "$verbose" = y ]; then
+    echo -e "`echo -e "$headers" | perl -pe 's/^/  /'`"
+  fi
 done
