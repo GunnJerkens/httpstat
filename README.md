@@ -25,3 +25,7 @@ gives this output:
 The tool is lazy, and doesn't follow redirects, but it does show them. To get
 the status of the destination of a redirect, take the URL after the `->`, and
 use it to replace that line in your `urls.txt` file.
+
+## license
+
+MIT
